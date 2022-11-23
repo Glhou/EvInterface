@@ -53,6 +53,8 @@ func bidHandle(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(id)
 
 	db.Close()
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func auctionHandle(w http.ResponseWriter, r *http.Request) {
@@ -91,6 +93,8 @@ func auctionHandle(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(affect)
 
 	db.Close()
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func tokenHandle(w http.ResponseWriter, r *http.Request) {
@@ -115,6 +119,52 @@ func tokenHandle(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(id)
 
 	db.Close()
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func dataHandle(w http.ResponseWriter, r *http.Request) {
+	// return all bids and tokens in a json
+	db, err := sql.Open("sqlite3", "./data.sqlite")
+	checkErr(err)
+
+	rows, err := db.Query("SELECT * FROM bids")
+	checkErr(err)
+
+	var bids []Bid
+	for rows.Next() {
+		var id int
+		var bid Bid
+		err = rows.Scan(&id, &bid.CarId, &bid.CarEnergy, &bid.CarRadius, &bid.CarLat, &bid.CarLon, &bid.Price, &bid.TokenId, &bid.Win)
+		checkErr(err)
+		bids = append(bids, bid)
+	}
+	rows.Close()
+
+	rows, err = db.Query("SELECT * FROM tokens")
+	checkErr(err)
+
+	var tokens []Token
+	for rows.Next() {
+		var id int
+		var token Token
+		err = rows.Scan(&id, &token.TokenId, &token.TokenLat, &token.TokenLon, &token.TokenPrice)
+		checkErr(err)
+		tokens = append(tokens, token)
+	}
+	rows.Close()
+
+	db.Close()
+
+	var data struct {
+		Bids   []Bid
+		Tokens []Token
+	}
+
+	data.Bids = bids
+	data.Tokens = tokens
+
+	json.NewEncoder(w).Encode(data)
 }
 
 func initDB(w http.ResponseWriter, r *http.Request) {
@@ -150,6 +200,9 @@ func initDB(w http.ResponseWriter, r *http.Request) {
 	checkErr(err)
 
 	db.Close()
+
+	// send ok http response
+	w.WriteHeader(http.StatusOK)
 }
 
 func checkErr(err error) {

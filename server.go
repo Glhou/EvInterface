@@ -15,6 +15,7 @@ func main() {
 	http.HandleFunc("/bid", bidHandle)
 	http.HandleFunc("/auction", auctionHandle)
 	http.HandleFunc("/token", tokenHandle)
+	http.HandleFunc("/data", dataHandle)
 	http.HandleFunc("/reset", initDB)
 
 	fmt.Printf("Starting server at port %v\n", PORT)
