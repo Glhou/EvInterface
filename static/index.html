@@ -94,13 +94,10 @@
 
     function reloadMap(center) {
         map.eachLayer(function (layer) {
-            map.removeLayer(layer);
+            if (layer._url != "https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png") {
+                map.removeLayer(layer);
+            }
         });
-
-        L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            className: 'map-tiles'
-        }).addTo(map);
 
         map.panTo(center);
     }
