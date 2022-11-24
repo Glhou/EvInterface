@@ -52,12 +52,15 @@
 <h1>
     Ev Simulation
 </h1>
-<button onclick="toggleLabel()">Toggle Labels</button>
-<button onclick="toggleCircle()">Toggle Circle</button>
+<button onclick="toggleLabel();reloadData()">Toggle Labels</button>
+<button onclick="toggleCircle();reloadData()">Toggle Circle</button>
 <button onclick="reloadData()">ReloadMap</button>
 <script>
+    var LABELS = true;
+    var CIRCLES = true;
     function toggleLabel() {
         var labels = document.getElementsByClassName("my-label");
+        LABELS = !LABELS;
         for (var i = 0; i < labels.length; i++) {
             var label = labels[i];
             if (label.style.opacity == 0) {
@@ -69,6 +72,7 @@
     }
     function toggleCircle() {
         var circles = document.getElementsByClassName("circle");
+        CIRCLES = !CIRCLES;
         for (var i = 0; i < circles.length; i++) {
             var circle = circles[i];
             if (circle.style.opacity == 0) {
@@ -141,7 +145,6 @@
         var car = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M23.5 7c.276 0 .5.224.5.5v.511c0 .793-.926.989-1.616.989l-1.086-2h2.202zm-1.441 3.506c.639 1.186.946 2.252.946 3.666 0 1.37-.397 2.533-1.005 3.981v1.847c0 .552-.448 1-1 1h-1.5c-.552 0-1-.448-1-1v-1h-13v1c0 .552-.448 1-1 1h-1.5c-.552 0-1-.448-1-1v-1.847c-.608-1.448-1.005-2.611-1.005-3.981 0-1.414.307-2.48.946-3.666.829-1.537 1.851-3.453 2.93-5.252.828-1.382 1.262-1.707 2.278-1.889 1.532-.275 2.918-.365 4.851-.365s3.319.09 4.851.365c1.016.182 1.45.507 2.278 1.889 1.079 1.799 2.101 3.715 2.93 5.252zm-16.059 2.994c0-.828-.672-1.5-1.5-1.5s-1.5.672-1.5 1.5.672 1.5 1.5 1.5 1.5-.672 1.5-1.5zm10 1c0-.276-.224-.5-.5-.5h-7c-.276 0-.5.224-.5.5s.224.5.5.5h7c.276 0 .5-.224.5-.5zm2.941-5.527s-.74-1.826-1.631-3.142c-.202-.298-.515-.502-.869-.566-1.511-.272-2.835-.359-4.441-.359s-2.93.087-4.441.359c-.354.063-.667.267-.869.566-.891 1.315-1.631 3.142-1.631 3.142 1.64.313 4.309.497 6.941.497s5.301-.184 6.941-.497zm2.059 4.527c0-.828-.672-1.5-1.5-1.5s-1.5.672-1.5 1.5.672 1.5 1.5 1.5 1.5-.672 1.5-1.5zm-18.298-6.5h-2.202c-.276 0-.5.224-.5.5v.511c0 .793.926.989 1.616.989l1.086-2z"/></svg>'
         var energy = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-2 19l1.5-5h-4.5l7-9-1.5 5h4.5l-7 9z"/></svg>'
 
-
         fetch("data", {
             method: 'GET',
             headers: {
@@ -152,31 +155,37 @@
         ).then((data) => {
             bids = data["Bids"] ? data["Bids"] : [];
             tokens = data["Tokens"] ? data["Tokens"] : [];
-            console.log(bids, tokens);
             center = getCenterPoint(tokens, bids)
             reloadMap(center ? center : [0, 0]);
-            console.log(bids, tokens)
             bids.forEach((bid) => {
-                console.log(bid)
-                L.marker([bid["CarLat"], bid["CarLon"]], { icon: L.divIcon({ html: car }) }).addTo(map).bindPopup(`Car ${bid['CarId']}: ${bid['CarEnergy']}`)
-                L.circle([bid["CarLat"], bid["CarLon"]], {
-                    className: 'circle',
-                    color: 'red',
-                    fillColor: '#f03',
-                    fillOpacity: 0.5,
-                    radius: bid["CarRadius"] * 1000
-                }).addTo(map);
+                var marker = L.marker([bid["CarLat"], bid["CarLon"]], { icon: L.divIcon({ html: car }) }).addTo(map).bindPopup(`Car ${bid['CarId']}: ${bid['CarEnergy']}%`, { className: "label" })
+                if (CIRCLES) {
+                    L.circle([bid["CarLat"], bid["CarLon"]], {
+                        className: 'circle',
+                        color: 'red',
+                        fillColor: '#f03',
+                        fillOpacity: 0.5,
+                        radius: bid["CarRadius"] * 1000
+                    }).addTo(map);
+                }
                 var token = getTokenFromId(bid["TokenId"], tokens)
                 if (token != null) {
                     var price = toString(bid["Price"])
-                    L.polyline([
-                        [bid['CarLat'], bid['CarLon']],
-                        [token['TokenLat'], token['TokenLon']],
-                    ], { color: bid["Win"] ? "green" : "blue" }).addTo(map).bindTooltip(`${bid['Price']}`, { permanent: true, className: "my-label", offset: [-24, 0] });
+                    if (LABELS) {
+                        L.polyline([
+                            [bid['CarLat'], bid['CarLon']],
+                            [token['TokenLat'], token['TokenLon']],
+                        ], { color: bid["Win"] ? "green" : "blue" }).addTo(map).bindTooltip(`${bid['Price']}円`, { permanent: true, className: "my-label", offset: [-24, 0] });
+                    } else {
+                        L.polyline([
+                            [bid['CarLat'], bid['CarLon']],
+                            [token['TokenLat'], token['TokenLon']],
+                        ], { color: bid["Win"] ? "green" : "blue" }).addTo(map)
+                    }
                 }
             })
             tokens.forEach((token) => {
-                L.marker([token["TokenLat"], token["TokenLon"]], { icon: L.divIcon({ html: energy }) }).addTo(map).bindPopup(`Token ${token['TokenId']}: ${token['TokenPrice']} yen`)
+                L.marker([token["TokenLat"], token["TokenLon"]], { icon: L.divIcon({ html: energy }) }).addTo(map).bindPopup(`Token ${token['TokenId']}: ${token['TokenPrice']}円`, { className: "label" })
             })
         })
     }
@@ -187,8 +196,8 @@
         while (1 == 1) {
             console.log("Reloading")
             reloadData()
-            // sleep 5s
-            await new Promise(r => setTimeout(r, 5000));
+            // sleep 1.5s
+            await new Promise(r => setTimeout(r, 1500));
         }
     }
     load()

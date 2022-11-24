@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -26,10 +27,11 @@ type Auction struct {
 }
 
 type Token struct {
-	TokenId    string
-	TokenLat   float64
-	TokenLon   float64
-	TokenPrice int
+	TokenId        string
+	TokenLat       float64
+	TokenLon       float64
+	TokenPrice     int
+	AuctionEndTime sql.NullInt64
 }
 
 func bidHandle(w http.ResponseWriter, r *http.Request) {
@@ -66,32 +68,58 @@ func auctionHandle(w http.ResponseWriter, r *http.Request) {
 	db, err := sql.Open("sqlite3", "./data.sqlite")
 	checkErr(err)
 
-	// update
-	stmt, err := db.Prepare("UPDATE bids SET win=? WHERE carId=?")
-	checkErr(err)
+	if a.WinnerCarId == "-1" {
+		// remove token, no winner
+		stmt, err := db.Prepare("DELETE FROM tokens WHERE tokenId=?")
+		checkErr(err)
 
-	res, err := stmt.Exec(true, a.WinnerCarId)
-	checkErr(err)
+		res, err := stmt.Exec(a.TokenId)
+		checkErr(err)
 
-	affect, err := res.RowsAffected()
-	checkErr(err)
+		id, err := res.LastInsertId()
+		checkErr(err)
 
-	fmt.Println("winner : ")
-	fmt.Println(affect)
+		fmt.Println(id)
 
-	// delete
-	stmt, err = db.Prepare("DELETE FROM bids WHERE tokenId=? AND win=0")
-	checkErr(err)
+	} else {
+		// set time end of auction to now in seconds
+		stmt, err := db.Prepare("UPDATE tokens SET auctionEndTime = ? WHERE tokenId = ?")
+		checkErr(err)
 
-	res, err = stmt.Exec(a.TokenId)
-	checkErr(err)
+		res, err := stmt.Exec(time.Now().Unix(), a.TokenId)
+		checkErr(err)
 
-	affect, err = res.RowsAffected()
-	checkErr(err)
+		id, err := res.LastInsertId()
+		checkErr(err)
 
-	fmt.Println("losers : ")
-	fmt.Println(affect)
+		fmt.Println(id)
 
+		// update
+		stmt2, err := db.Prepare("UPDATE bids SET win=TRUE WHERE carId=?")
+		checkErr(err)
+
+		res2, err := stmt2.Exec(a.WinnerCarId)
+		checkErr(err)
+
+		affect, err := res2.RowsAffected()
+		checkErr(err)
+
+		fmt.Println("Winner ? : ")
+		fmt.Println(affect)
+
+		// delete
+		stmt, err = db.Prepare("DELETE FROM bids WHERE tokenId=? AND win=FALSE")
+		checkErr(err)
+
+		res, err = stmt.Exec(a.TokenId)
+		checkErr(err)
+
+		affect, err = res.RowsAffected()
+		checkErr(err)
+
+		fmt.Println("Nb Losers : ")
+		fmt.Println(affect)
+	}
 	db.Close()
 
 	w.WriteHeader(http.StatusOK)
@@ -107,7 +135,7 @@ func tokenHandle(w http.ResponseWriter, r *http.Request) {
 	checkErr(err)
 
 	// insert
-	stmt, err := db.Prepare("INSERT INTO tokens(tokenId, tokenLat, tokenLon, tokenPrice) values(?, ?, ?, ?)")
+	stmt, err := db.Prepare("INSERT INTO tokens(tokenId, tokenLat, tokenLon, tokenPrice, auctionEndTime) values(?, ?, ?, ?, 0)")
 	checkErr(err)
 
 	res, err := stmt.Exec(t.TokenId, t.TokenLat, t.TokenLon, t.TokenPrice)
@@ -128,7 +156,56 @@ func dataHandle(w http.ResponseWriter, r *http.Request) {
 	db, err := sql.Open("sqlite3", "./data.sqlite")
 	checkErr(err)
 
-	rows, err := db.Query("SELECT * FROM bids")
+	rows, err := db.Query("SELECT * FROM tokens")
+	checkErr(err)
+
+	var removeToken []Token
+	var tokens []Token
+	for rows.Next() {
+		var id int
+		var token Token
+		err = rows.Scan(&id, &token.TokenId, &token.TokenLat, &token.TokenLon, &token.TokenPrice, &token.AuctionEndTime)
+		checkErr(err)
+		// if AuctionEndTime is more than 30 seconds remove the token
+		if token.AuctionEndTime.Valid && token.AuctionEndTime.Int64 != 0 && token.AuctionEndTime.Int64+30 < time.Now().Unix() {
+			// add token to remove list
+			removeToken = append(removeToken, token)
+		} else {
+			tokens = append(tokens, token)
+		}
+	}
+	rows.Close()
+
+	// remove tokens and bid associated
+	for _, token := range removeToken {
+		// delete
+		stmt, err := db.Prepare("DELETE FROM tokens WHERE tokenId=?")
+		checkErr(err)
+
+		res, err := stmt.Exec(token.TokenId)
+		checkErr(err)
+
+		affect, err := res.RowsAffected()
+		checkErr(err)
+
+		fmt.Println("remove token : ")
+		fmt.Println(affect)
+
+		// delete
+		stmt, err = db.Prepare("DELETE FROM bids WHERE tokenId=?")
+		checkErr(err)
+
+		res, err = stmt.Exec(token.TokenId)
+		checkErr(err)
+
+		affect, err = res.RowsAffected()
+		checkErr(err)
+
+		fmt.Println("remove bids : ")
+		fmt.Println(affect)
+	}
+
+	rows, err = db.Query("SELECT * FROM bids")
 	checkErr(err)
 
 	var bids []Bid
@@ -138,19 +215,6 @@ func dataHandle(w http.ResponseWriter, r *http.Request) {
 		err = rows.Scan(&id, &bid.CarId, &bid.CarEnergy, &bid.CarRadius, &bid.CarLat, &bid.CarLon, &bid.Price, &bid.TokenId, &bid.Win)
 		checkErr(err)
 		bids = append(bids, bid)
-	}
-	rows.Close()
-
-	rows, err = db.Query("SELECT * FROM tokens")
-	checkErr(err)
-
-	var tokens []Token
-	for rows.Next() {
-		var id int
-		var token Token
-		err = rows.Scan(&id, &token.TokenId, &token.TokenLat, &token.TokenLon, &token.TokenPrice)
-		checkErr(err)
-		tokens = append(tokens, token)
 	}
 	rows.Close()
 
@@ -193,9 +257,10 @@ func initDB(w http.ResponseWriter, r *http.Request) {
 	checkErr(err)
 
 	sqlStmt = `
-	create table tokens (id integer not null primary key, tokenId text, tokenLat real, tokenLon real, tokenPrice integer);
+	create table tokens (id integer not null primary key, tokenId text, tokenLat real, tokenLon real, tokenPrice integer, auctionEndTime integer);
 	delete from tokens;
 	`
+
 	_, err = db.Exec(sqlStmt)
 	checkErr(err)
 
