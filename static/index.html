@@ -153,13 +153,14 @@
         }).then((response) =>
             response.json()
         ).then((data) => {
+            var circles_list = []
             bids = data["Bids"] ? data["Bids"] : [];
             tokens = data["Tokens"] ? data["Tokens"] : [];
             center = getCenterPoint(tokens, bids)
             reloadMap(center ? center : [0, 0]);
             bids.forEach((bid) => {
                 var marker = L.marker([bid["CarLat"], bid["CarLon"]], { icon: L.divIcon({ html: car }) }).addTo(map).bindPopup(`Car ${bid['CarId']}: ${bid['CarEnergy']}%`, { className: "label" })
-                if (CIRCLES) {
+                if (CIRCLES && !circles_list.includes(bid['CarId'])) {
                     L.circle([bid["CarLat"], bid["CarLon"]], {
                         className: 'circle',
                         color: 'red',
@@ -167,6 +168,7 @@
                         fillOpacity: 0.5,
                         radius: bid["CarRadius"] * 1000
                     }).addTo(map);
+                    circles_list.push(bid["CarId"])
                 }
                 var token = getTokenFromId(bid["TokenId"], tokens)
                 if (token != null) {
