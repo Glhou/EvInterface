@@ -42,17 +42,32 @@ func bidHandle(w http.ResponseWriter, r *http.Request) {
 	db, err := sql.Open("sqlite3", "./data.sqlite")
 	checkErr(err)
 
-	// insert
-	stmt, err := db.Prepare("INSERT INTO bids(carId, carEnergy, carRadius, carLat, carLon, price, tokenId, win) values(?, ?, ?, ?, ?, ?, ?, ?)")
+	// update the bid if it exists
+	stmt, err := db.Prepare("UPDATE bids SET carEnergy=?, carRadius=?, carLat=?, carLon=?, price=? WHERE carId=? AND tokenId=?")
 	checkErr(err)
 
-	res, err := stmt.Exec(b.CarId, b.CarEnergy, b.CarRadius, b.CarLat, b.CarLon, b.Price, b.TokenId, b.Win)
+	res, err := stmt.Exec(b.CarEnergy, b.CarRadius, b.CarLat, b.CarLon, b.Price, b.CarId, b.TokenId)
 	checkErr(err)
 
-	id, err := res.LastInsertId()
+	affect, err := res.RowsAffected()
 	checkErr(err)
 
-	fmt.Println(id)
+	fmt.Println("Update ? : ")
+	fmt.Println(affect)
+
+	// insert if it doesn't exist
+	if affect == 0 {
+		stmt, err := db.Prepare("INSERT INTO bids(carId, carEnergy, carRadius, carLat, carLon, price, tokenId, win) values(?, ?, ?, ?, ?, ?, ?, ?)")
+		checkErr(err)
+
+		res, err := stmt.Exec(b.CarId, b.CarEnergy, b.CarRadius, b.CarLat, b.CarLon, b.Price, b.TokenId, b.Win)
+		checkErr(err)
+
+		id, err := res.LastInsertId()
+		checkErr(err)
+
+		fmt.Println(id)
+	}
 
 	db.Close()
 

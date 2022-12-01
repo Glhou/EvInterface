@@ -358,10 +358,10 @@
             center = getCenterPoint(tokens, bids)
             reloadMap(center ? center : [0, 0]);
             bids.forEach((bid) => {
-                consumerIcon = bid.CarId.startsWith("PoC") ? generatedConsumer : realConsumer;
+                consumerIcon = bid.CarId.startsWith("PoC") ? realConsumer : generatedConsumer;
                 if (CARLABELS) {
                     var marker = L.marker([bid["CarLat"], bid["CarLon"]], { icon: L.divIcon({ html: consumerIcon }) }).addTo(map)
-                        .bindTooltip(`<div id="${bid['CarId']}">${bid['CarId']}: <b>${bid['CarEnergy']}%</b> </div>`, { permanent: true, className: "carLabel", offset: [-20, 30] })
+                        .bindTooltip(`<div id="${bid['CarId']}"><b>${bid['CarEnergy']}%</b> </div>`, { permanent: true, className: "carLabel", offset: [-25, 30] })
                 }
                 else {
                     var marker = L.marker([bid["CarLat"], bid["CarLon"]], { icon: L.divIcon({ html: consumerIcon }) }).addTo(map)
@@ -408,10 +408,10 @@
                 }
             })
             tokens.forEach((token) => {
-                producerIcon = token.TokenId.startsWith("PoC") ? generatedProducer : realProducer;
+                producerIcon = token.TokenId.startsWith("PoC") ? realProducer : generatedProducer;
                 if (ENERGYLABELS) {
                     L.marker([token["TokenLat"], token["TokenLon"]], { icon: L.divIcon({ html: producerIcon }) }).addTo(map)
-                        .bindTooltip(`<div id="${token['TokenId']}">${token['TokenId']}: <b>${token['TokenPrice']}円</b> </div>`, { permanent: true, className: "energyLabel", offset: [-50, -30] })
+                        .bindTooltip(`<div id="${token['TokenId']}"><b>${token['TokenPrice']}円</b> </div>`, { permanent: true, className: "energyLabel", offset: [-20, -30] })
                 }
                 else {
                     L.marker([token["TokenLat"], token["TokenLon"]], { icon: L.divIcon({ html: producerIcon }) }).addTo(map)
