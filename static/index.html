@@ -1,7 +1,7 @@
 <html>
 
 <head>
-    <title>My Static Site</title>
+    <title>Green Energy</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
         integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin="" />
     <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"
@@ -36,6 +36,51 @@
             opacity: 0;
         }
 
+        .my-label:hover {
+            opacity: 1;
+        }
+
+
+        .carLabel {
+            position: absolute;
+            padding: 3px;
+            font-size: 14px;
+            font-weight: bold;
+            background-color: rgb(41, 41, 54);
+            color: #fff;
+            border-radius: 3px;
+            border: none;
+            opacity: 0.7;
+        }
+
+        .carLabel::before {
+            opacity: 0;
+        }
+
+        .carLabel::hover {
+            opacity: 1;
+        }
+
+        .energyLabel {
+            position: absolute;
+            padding: 3px;
+            font-size: 14px;
+            font-weight: bold;
+            background-color: rgb(33, 59, 38);
+            color: #fff;
+            border-radius: 3px;
+            border: none;
+            opacity: 0.7;
+        }
+
+        .energyLabel::before {
+            opacity: 0;
+        }
+
+        .energyLabel::hover {
+            opacity: 1;
+        }
+
         .leaflet-div-icon {
             background-color: transparent;
             border: none;
@@ -47,7 +92,7 @@
             opacity: 0.5;
         }
 
-        #popup {
+        .popup {
             width: 200px;
             padding: 10px;
             position: absolute;
@@ -86,13 +131,18 @@
     Ev Simulation
 </h1>
 
-<div id="popup"></div>
+<div id="popups"></div>
 
 <script>
     async function popup(text) {
         console.log("Popup : " + text)
-        const popup = document.getElementById('popup');
+        // create a popup element with id popup + text
+        var popup = document.createElement("div");
+        popup.id = "popup" + text;
+        popup.className = "popup";
         popup.innerHTML = text;
+        // add the popup to the popups div
+        document.getElementById("popups").appendChild(popup);
         // move popup element 200 px to top and display none it
         popup.style.opacity = "1"
         // wait for 2 seconds
@@ -137,15 +187,43 @@
 </script>
 
 <button onclick="toggleLabel();reloadData()">Toggle Labels</button>
+<button onclick="toggleCarLabel();reloadData()">Toggle Car Labels</button>
+<button onclick="toggleEnergyLabel();reloadData()">Toggle Energy Labels</button>
 <button onclick="toggleCircle();reloadData()">Toggle Circle</button>
 <button onclick="reloadData()">Reload Map</button>
 <button onclick="toggleLegend()">Hide Legend</button>
 <script>
     var LABELS = true;
+    var CARLABELS = true;
+    var ENERGYLABELS = true;
     var CIRCLES = true;
     function toggleLabel() {
         var labels = document.getElementsByClassName("my-label");
         LABELS = !LABELS;
+        for (var i = 0; i < labels.length; i++) {
+            var label = labels[i];
+            if (label.style.opacity == 0) {
+                label.style.opacity = 1;
+            } else {
+                label.style.opacity = 0;
+            }
+        }
+    }
+    function toggleCarLabel() {
+        var labels = document.getElementsByClassName("carLabel");
+        CARLABELS = !CARLABELS;
+        for (var i = 0; i < labels.length; i++) {
+            var label = labels[i];
+            if (label.style.opacity == 0) {
+                label.style.opacity = 1;
+            } else {
+                label.style.opacity = 0;
+            }
+        }
+    }
+    function toggleEnergyLabel() {
+        var labels = document.getElementsByClassName("energyLabel");
+        ENERGYLABELS = !ENERGYLABELS;
         for (var i = 0; i < labels.length; i++) {
             var label = labels[i];
             if (label.style.opacity == 0) {
@@ -268,7 +346,13 @@
             center = getCenterPoint(tokens, bids)
             reloadMap(center ? center : [0, 0]);
             bids.forEach((bid) => {
-                var marker = L.marker([bid["CarLat"], bid["CarLon"]], { icon: L.divIcon({ html: car }) }).addTo(map).bindPopup(`Car ${bid['CarId']}: ${bid['CarEnergy']}%`, { className: "label" })
+                if (CARLABELS) {
+                    var marker = L.marker([bid["CarLat"], bid["CarLon"]], { icon: L.divIcon({ html: car }) }).addTo(map)
+                        .bindTooltip(`<div id="${bid['CarId']}"> Car ${bid['CarId']}: <b>${bid['CarEnergy']}%</b> </div>`, { permanent: true, className: "carLabel", offset: [-20, 30] })
+                }
+                else {
+                    var marker = L.marker([bid["CarLat"], bid["CarLon"]], { icon: L.divIcon({ html: car }) }).addTo(map)
+                }
                 if (CIRCLES && !circles_list.includes(bid['CarId'])) {
                     L.circle([bid["CarLat"], bid["CarLon"]], {
                         className: 'circle',
@@ -302,7 +386,13 @@
                 }
             })
             tokens.forEach((token) => {
-                L.marker([token["TokenLat"], token["TokenLon"]], { icon: L.divIcon({ html: energy }) }).addTo(map).bindPopup(`Token ${token['TokenId']}: ${token['TokenPrice']}円`, { className: "label" })
+                if (ENERGYLABELS) {
+                    L.marker([token["TokenLat"], token["TokenLon"]], { icon: L.divIcon({ html: energy }) }).addTo(map)
+                        .bindTooltip(`<div id="${token['TokenId']}"> Token ${token['TokenId']}: <b>${token['TokenPrice']}円</b> </div>`, { permanent: true, className: "energyLabel", offset: [-50, -30] })
+                }
+                else {
+                    L.marker([token["TokenLat"], token["TokenLon"]], { icon: L.divIcon({ html: energy }) }).addTo(map)
+                }
             })
             oldBidsStatus = bidsToIdAndWin(bids)
         })
