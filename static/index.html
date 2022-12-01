@@ -160,7 +160,10 @@
         <div id="generatedConsumer" class="line_with_icon"></div>
     </div>
     <div>
-        <div id="energy" class="line_with_icon"></div>
+        <div id="realProducer" class="line_with_icon"></div>
+    </div>
+    <div>
+        <div id="generatedProducer" class="line_with_icon"></div>
     </div>
     <div>
         <div id="circle" class="line_with_icon"></div>
@@ -177,14 +180,16 @@
     var iconSize = "40"
     var realConsumer = `<svg xmlns="http://www.w3.org/2000/svg" width=${iconSize} height=${iconSize} viewBox="0 0 640 512" fill="#600ff6"><path d="M342.5 32C357.2 32 370.7 40.05 377.6 52.98L391.7 78.93L439.1 39.42C444.9 34.62 452.1 32 459.6 32H480C497.7 32 512 46.33 512 64V96C512 113.7 497.7 128 480 128H418.2L473.3 229.1C485.5 226.1 498.5 224 512 224C582.7 224 640 281.3 640 352C640 422.7 582.7 480 512 480C441.3 480 384 422.7 384 352C384 311.1 402.4 276.3 431.1 252.8L415.7 224.2C376.1 253.4 352 299.8 352 352C352 362.1 353.1 373.7 355.2 384H284.8C286.9 373.7 287.1 362.1 287.1 352C287.1 263.6 216.4 192 127.1 192H31.1V160C31.1 142.3 46.33 128 63.1 128H165.5C182.5 128 198.7 134.7 210.7 146.7L255.1 192L354.1 110.3L337.7 80H279.1C266.7 80 255.1 69.25 255.1 56C255.1 42.75 266.7 32 279.1 32L342.5 32zM448 352C448 387.3 476.7 416 512 416C547.3 416 576 387.3 576 352C576 316.7 547.3 288 512 288C509.6 288 507.2 288.1 504.9 288.4L533.1 340.6C539.4 352.2 535.1 366.8 523.4 373.1C511.8 379.4 497.2 375.1 490.9 363.4L462.7 311.2C453.5 322.3 448 336.5 448 352V352zM253.8 376C242.5 435.2 190.5 480 128 480C57.31 480 0 422.7 0 352C0 281.3 57.31 224 128 224C190.5 224 242.5 268.8 253.8 328H187.3C177.9 304.5 154.9 288 128 288C92.65 288 64 316.7 64 352C64 387.3 92.65 416 128 416C154.9 416 177.9 399.5 187.3 376H253.8zM96 352C96 334.3 110.3 320 128 320C145.7 320 160 334.3 160 352C160 369.7 145.7 384 128 384C110.3 384 96 369.7 96 352z"></path></svg>`
     var generatedConsumer = `<svg xmlns="http://www.w3.org/2000/svg" width=${iconSize} height=${iconSize} viewBox="0 0 24 24" fill="#909ff9"><path d="M23.5 7c.276 0 .5.224.5.5v.511c0 .793-.926.989-1.616.989l-1.086-2h2.202zm-1.441 3.506c.639 1.186.946 2.252.946 3.666 0 1.37-.397 2.533-1.005 3.981v1.847c0 .552-.448 1-1 1h-1.5c-.552 0-1-.448-1-1v-1h-13v1c0 .552-.448 1-1 1h-1.5c-.552 0-1-.448-1-1v-1.847c-.608-1.448-1.005-2.611-1.005-3.981 0-1.414.307-2.48.946-3.666.829-1.537 1.851-3.453 2.93-5.252.828-1.382 1.262-1.707 2.278-1.889 1.532-.275 2.918-.365 4.851-.365s3.319.09 4.851.365c1.016.182 1.45.507 2.278 1.889 1.079 1.799 2.101 3.715 2.93 5.252zm-16.059 2.994c0-.828-.672-1.5-1.5-1.5s-1.5.672-1.5 1.5.672 1.5 1.5 1.5 1.5-.672 1.5-1.5zm10 1c0-.276-.224-.5-.5-.5h-7c-.276 0-.5.224-.5.5s.224.5.5.5h7c.276 0 .5-.224.5-.5zm2.941-5.527s-.74-1.826-1.631-3.142c-.202-.298-.515-.502-.869-.566-1.511-.272-2.835-.359-4.441-.359s-2.93.087-4.441.359c-.354.063-.667.267-.869.566-.891 1.315-1.631 3.142-1.631 3.142 1.64.313 4.309.497 6.941.497s5.301-.184 6.941-.497zm2.059 4.527c0-.828-.672-1.5-1.5-1.5s-1.5.672-1.5 1.5.672 1.5 1.5 1.5 1.5-.672 1.5-1.5zm-18.298-6.5h-2.202c-.276 0-.5.224-.5.5v.511c0 .793.926.989 1.616.989l1.086-2z"/></svg>`
-    var energy = `<svg xmlns="http://www.w3.org/2000/svg" width=${iconSize} height=${iconSize} viewBox="0 0 24 24" fill="#10f010"><path d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-2 19l1.5-5h-4.5l7-9-1.5 5h4.5l-7 9z"/></svg>`
+    var generatedProducer = `<svg xmlns="http://www.w3.org/2000/svg" width=${iconSize} height=${iconSize} viewBox="0 0 24 24" fill="#80f080"><path d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-2 19l1.5-5h-4.5l7-9-1.5 5h4.5l-7 9z"/></svg>`
+    var realProducer = `<svg xmlns="http://www.w3.org/2000/svg" width=${iconSize} height=${iconSize} viewBox="0 0 24 24" fill="#30f003"><path d="M16 0l-3 9h9l-1.866 2h-14.4l10.266-11zm2.267 13h-14.4l-1.867 2h9l-3 9 10.267-11z"/></svg>`
     var redCircle = `<svg pointer-events="none" class="leaflet-zoom-animated" width=${iconSize} height=${iconSize} viewBox="0 0 20 20"><circle cx = "10" cy = "10" r = "8" stroke = "red" stroke-opacity="1" stroke - width="2" stroke - linecap="round" stroke - linejoin="round" fill = "#f05010" fill - opacity="0.5" fill - rule="evenodd" /></svg >`
     var blueLine = `<svg pointer-events="none" class="leaflet-zoom-animated" width=${iconSize} height=${iconSize} viewBox="0 0 20 20"><line x1="0" y1="0" x2="20" y2="20" stroke="blue" stroke-opacity="1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" fill-opacity="0.5" fill-rule="evenodd" /></svg>`
     var greenLine = `<svg pointer-events="none" class="leaflet-zoom-animated" width=${iconSize} height=${iconSize} viewBox="0 0 20 20"><line x1="0" y1="0" x2="20" y2="20" stroke="green" stroke-opacity="1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" fill-opacity="0.5" fill-rule="evenodd" /></svg>`
     // put svg into their divs
     document.getElementById("realConsumer").innerHTML = realConsumer + "<span> - Real Consumer</span>"
     document.getElementById("generatedConsumer").innerHTML = generatedConsumer + "<span> - Generated Consumer</span>"
-    document.getElementById("energy").innerHTML = energy + "<span> - Producer</span>"
+    document.getElementById("generatedProducer").innerHTML = generatedProducer + "<span> - Generated Producer</span>"
+    document.getElementById("realProducer").innerHTML = realProducer + "<span> - Real Producer</span>"
     document.getElementById("circle").innerHTML = redCircle + "<span> - Consumer Radius </span>"
     document.getElementById("blueLine").innerHTML = blueLine + "<span> - Consumer Bid </span>"
     document.getElementById("greenLine").innerHTML = greenLine + "<span> - Consumer Won </span>"
@@ -336,7 +341,8 @@
         // icons from https://iconmonstr.com
         var generatedConsumer = '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="#909ff9"><path d="M23.5 7c.276 0 .5.224.5.5v.511c0 .793-.926.989-1.616.989l-1.086-2h2.202zm-1.441 3.506c.639 1.186.946 2.252.946 3.666 0 1.37-.397 2.533-1.005 3.981v1.847c0 .552-.448 1-1 1h-1.5c-.552 0-1-.448-1-1v-1h-13v1c0 .552-.448 1-1 1h-1.5c-.552 0-1-.448-1-1v-1.847c-.608-1.448-1.005-2.611-1.005-3.981 0-1.414.307-2.48.946-3.666.829-1.537 1.851-3.453 2.93-5.252.828-1.382 1.262-1.707 2.278-1.889 1.532-.275 2.918-.365 4.851-.365s3.319.09 4.851.365c1.016.182 1.45.507 2.278 1.889 1.079 1.799 2.101 3.715 2.93 5.252zm-16.059 2.994c0-.828-.672-1.5-1.5-1.5s-1.5.672-1.5 1.5.672 1.5 1.5 1.5 1.5-.672 1.5-1.5zm10 1c0-.276-.224-.5-.5-.5h-7c-.276 0-.5.224-.5.5s.224.5.5.5h7c.276 0 .5-.224.5-.5zm2.941-5.527s-.74-1.826-1.631-3.142c-.202-.298-.515-.502-.869-.566-1.511-.272-2.835-.359-4.441-.359s-2.93.087-4.441.359c-.354.063-.667.267-.869.566-.891 1.315-1.631 3.142-1.631 3.142 1.64.313 4.309.497 6.941.497s5.301-.184 6.941-.497zm2.059 4.527c0-.828-.672-1.5-1.5-1.5s-1.5.672-1.5 1.5.672 1.5 1.5 1.5 1.5-.672 1.5-1.5zm-18.298-6.5h-2.202c-.276 0-.5.224-.5.5v.511c0 .793.926.989 1.616.989l1.086-2z"/></svg>'
         var realConsumer = '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 640 512" fill="#604ff6"><path d="M342.5 32C357.2 32 370.7 40.05 377.6 52.98L391.7 78.93L439.1 39.42C444.9 34.62 452.1 32 459.6 32H480C497.7 32 512 46.33 512 64V96C512 113.7 497.7 128 480 128H418.2L473.3 229.1C485.5 226.1 498.5 224 512 224C582.7 224 640 281.3 640 352C640 422.7 582.7 480 512 480C441.3 480 384 422.7 384 352C384 311.1 402.4 276.3 431.1 252.8L415.7 224.2C376.1 253.4 352 299.8 352 352C352 362.1 353.1 373.7 355.2 384H284.8C286.9 373.7 287.1 362.1 287.1 352C287.1 263.6 216.4 192 127.1 192H31.1V160C31.1 142.3 46.33 128 63.1 128H165.5C182.5 128 198.7 134.7 210.7 146.7L255.1 192L354.1 110.3L337.7 80H279.1C266.7 80 255.1 69.25 255.1 56C255.1 42.75 266.7 32 279.1 32L342.5 32zM448 352C448 387.3 476.7 416 512 416C547.3 416 576 387.3 576 352C576 316.7 547.3 288 512 288C509.6 288 507.2 288.1 504.9 288.4L533.1 340.6C539.4 352.2 535.1 366.8 523.4 373.1C511.8 379.4 497.2 375.1 490.9 363.4L462.7 311.2C453.5 322.3 448 336.5 448 352V352zM253.8 376C242.5 435.2 190.5 480 128 480C57.31 480 0 422.7 0 352C0 281.3 57.31 224 128 224C190.5 224 242.5 268.8 253.8 328H187.3C177.9 304.5 154.9 288 128 288C92.65 288 64 316.7 64 352C64 387.3 92.65 416 128 416C154.9 416 177.9 399.5 187.3 376H253.8zM96 352C96 334.3 110.3 320 128 320C145.7 320 160 334.3 160 352C160 369.7 145.7 384 128 384C110.3 384 96 369.7 96 352z"></path></svg>'
-        var energy = '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="#10f010"><path d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-2 19l1.5-5h-4.5l7-9-1.5 5h4.5l-7 9z"/></svg>'
+        var generatedProducer = '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="#80f080"><path d="M12 2c5.514 0 10 4.486 10 10s-4.486 10-10 10-10-4.486-10-10 4.486-10 10-10zm0-2c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm-2 19l1.5-5h-4.5l7-9-1.5 5h4.5l-7 9z"/></svg>'
+        var realProducer = '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="#30f003"><path d="M16 0l-3 9h9l-1.866 2h-14.4l10.266-11zm2.267 13h-14.4l-1.867 2h9l-3 9 10.267-11z"/></svg>'
 
         fetch("data", {
             method: 'GET',
@@ -352,7 +358,7 @@
             center = getCenterPoint(tokens, bids)
             reloadMap(center ? center : [0, 0]);
             bids.forEach((bid) => {
-                consumerIcon = bid.CarId.startsWith("car") ? realConsumer : generatedConsumer;
+                consumerIcon = bid.CarId.startsWith("PoC") ? generatedConsumer : realConsumer;
                 if (CARLABELS) {
                     var marker = L.marker([bid["CarLat"], bid["CarLon"]], { icon: L.divIcon({ html: consumerIcon }) }).addTo(map)
                         .bindTooltip(`<div id="${bid['CarId']}">${bid['CarId']}: <b>${bid['CarEnergy']}%</b> </div>`, { permanent: true, className: "carLabel", offset: [-20, 30] })
@@ -402,12 +408,13 @@
                 }
             })
             tokens.forEach((token) => {
+                producerIcon = token.TokenId.startsWith("PoC") ? generatedProducer : realProducer;
                 if (ENERGYLABELS) {
-                    L.marker([token["TokenLat"], token["TokenLon"]], { icon: L.divIcon({ html: energy }) }).addTo(map)
+                    L.marker([token["TokenLat"], token["TokenLon"]], { icon: L.divIcon({ html: producerIcon }) }).addTo(map)
                         .bindTooltip(`<div id="${token['TokenId']}">${token['TokenId']}: <b>${token['TokenPrice']}円</b> </div>`, { permanent: true, className: "energyLabel", offset: [-50, -30] })
                 }
                 else {
-                    L.marker([token["TokenLat"], token["TokenLon"]], { icon: L.divIcon({ html: energy }) }).addTo(map)
+                    L.marker([token["TokenLat"], token["TokenLon"]], { icon: L.divIcon({ html: producerIcon }) }).addTo(map)
                 }
             })
             oldBidsStatus = bidsToIdAndWin(bids)
