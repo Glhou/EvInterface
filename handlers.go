@@ -21,6 +21,13 @@ type Bid struct {
 	Win       bool `default:false`
 }
 
+type Ev struct {
+	CarId     string
+	CarEnergy int
+	CarRadius float32
+	CarLat    float64
+	CarLon    float64
+}
 type Auction struct {
 	WinnerCarId string
 	TokenId     string
@@ -61,6 +68,68 @@ func bidHandle(w http.ResponseWriter, r *http.Request) {
 		checkErr(err)
 
 		res, err := stmt.Exec(b.CarId, b.CarEnergy, b.CarRadius, b.CarLat, b.CarLon, b.Price, b.TokenId, b.Win)
+		checkErr(err)
+
+		id, err := res.LastInsertId()
+		checkErr(err)
+
+		fmt.Println(id)
+	}
+
+	db.Close()
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func evHanlde(w http.ResponseWriter, r *http.Request) {
+	// create a new ev or update it
+	var e Ev
+	json.NewDecoder(r.Body).Decode(&e)
+	fmt.Printf("%v\n", e)
+	db, err := sql.Open("sqlite3", "./data.sqlite")
+	checkErr(err)
+
+	// remove if carEnergy is -1
+	if e.CarEnergy == -1 {
+		stmt, err := db.Prepare("DELETE FROM evs WHERE carId=?")
+		checkErr(err)
+
+		res, err := stmt.Exec(e.CarId)
+		checkErr(err)
+
+		affect, err := res.RowsAffected()
+		checkErr(err)
+
+		fmt.Println("Delete ? : ")
+		fmt.Println(affect)
+
+		db.Close()
+
+		w.WriteHeader(http.StatusOK)
+
+		return
+	}
+
+	// update the ev if it exists
+	stmt, err := db.Prepare("UPDATE evs SET carEnergy=?, carRadius=?, carLat=?, carLon=? WHERE carId=?")
+	checkErr(err)
+
+	res, err := stmt.Exec(e.CarEnergy, e.CarRadius, e.CarLat, e.CarLon, e.CarId)
+	checkErr(err)
+
+	affect, err := res.RowsAffected()
+	checkErr(err)
+
+	fmt.Println("Update ? : ")
+	fmt.Println(affect)
+
+	// insert if it doesn't exist
+	if affect == 0 {
+
+		stmt, err := db.Prepare("INSERT INTO evs(carId, carEnergy, carRadius, carLat, carLon) values(?, ?, ?, ?, ?)")
+		checkErr(err)
+
+		res, err := stmt.Exec(e.CarId, e.CarEnergy, e.CarRadius, e.CarLat, e.CarLon)
 		checkErr(err)
 
 		id, err := res.LastInsertId()
@@ -149,17 +218,59 @@ func tokenHandle(w http.ResponseWriter, r *http.Request) {
 	db, err := sql.Open("sqlite3", "./data.sqlite")
 	checkErr(err)
 
-	// insert
-	stmt, err := db.Prepare("INSERT INTO tokens(tokenId, tokenLat, tokenLon, tokenPrice, auctionEndTime) values(?, ?, ?, ?, 0)")
+	// search if a car has win this token
+	var winnerCarId string
+	err = db.QueryRow("SELECT carId FROM bids WHERE tokenId=? AND win=TRUE", t.TokenId).Scan(&winnerCarId)
+	if err != nil {
+		fmt.Println("No winner for this token")
+	}
+	// if there is a winner set auctionEndTime to now
+	if winnerCarId != "" {
+		t.AuctionEndTime = sql.NullInt64{Int64: time.Now().Unix(), Valid: true}
+	}
+
+	// if token exists, remove all bid related to it
+	if t.TokenId != "" {
+		stmt, err := db.Prepare("DELETE FROM bids WHERE tokenId=?")
+		checkErr(err)
+
+		res, err := stmt.Exec(t.TokenId)
+		checkErr(err)
+
+		affect, err := res.RowsAffected()
+		checkErr(err)
+
+		fmt.Println("Nb Bids : ")
+		fmt.Println(affect)
+
+	}
+
+	// update the token
+	stmt, err := db.Prepare("UPDATE tokens SET tokenLat=?, tokenLon=?, tokenPrice=?, auctionEndTime=? WHERE tokenId=?")
 	checkErr(err)
 
-	res, err := stmt.Exec(t.TokenId, t.TokenLat, t.TokenLon, t.TokenPrice)
+	res, err := stmt.Exec(t.TokenLat, t.TokenLon, t.TokenPrice, t.AuctionEndTime, t.TokenId)
 	checkErr(err)
 
-	id, err := res.LastInsertId()
+	affect, err := res.RowsAffected()
 	checkErr(err)
 
-	fmt.Println(id)
+	fmt.Println("Update ? : ")
+	fmt.Println(affect)
+
+	// insert if it doesn't exist
+	if affect == 0 {
+		stmt, err := db.Prepare("INSERT INTO tokens(tokenId, tokenLat, tokenLon, tokenPrice, auctionEndTime) values(?, ?, ?, ?, ?)")
+		checkErr(err)
+
+		res, err := stmt.Exec(t.TokenId, t.TokenLat, t.TokenLon, t.TokenPrice, t.AuctionEndTime)
+		checkErr(err)
+
+		id, err := res.LastInsertId()
+		checkErr(err)
+
+		fmt.Println(id)
+	}
 
 	db.Close()
 
@@ -233,15 +344,31 @@ func dataHandle(w http.ResponseWriter, r *http.Request) {
 	}
 	rows.Close()
 
+	// get evs
+	rows, err = db.Query("SELECT * FROM evs")
+	checkErr(err)
+
+	var evs []Ev
+	for rows.Next() {
+		var id int
+		var ev Ev
+		err = rows.Scan(&id, &ev.CarId, &ev.CarEnergy, &ev.CarRadius, &ev.CarLat, &ev.CarLon)
+		checkErr(err)
+		evs = append(evs, ev)
+	}
+	rows.Close()
+
 	db.Close()
 
 	var data struct {
 		Bids   []Bid
 		Tokens []Token
+		Evs    []Ev
 	}
 
 	data.Bids = bids
 	data.Tokens = tokens
+	data.Evs = evs
 
 	json.NewEncoder(w).Encode(data)
 }
@@ -252,6 +379,13 @@ func initDB(w http.ResponseWriter, r *http.Request) {
 
 	// flush all if exists
 	stmt, err := db.Prepare("DROP TABLE IF EXISTS bids")
+	checkErr(err)
+
+	_, err = stmt.Exec()
+	checkErr(err)
+
+	// flush all if exists
+	stmt, err = db.Prepare("DROP TABLE IF EXISTS evs")
 	checkErr(err)
 
 	_, err = stmt.Exec()
@@ -268,6 +402,14 @@ func initDB(w http.ResponseWriter, r *http.Request) {
 	create table bids (id integer not null primary key, carId text, carEnergy integer, carRadius real, carLat real, carLon real, price integer, tokenId text, win boolean);
 	delete from bids;
 	`
+	_, err = db.Exec(sqlStmt)
+	checkErr(err)
+
+	sqlStmt = `
+	create table evs (id integer not null primary key, carId text, carEnergy integer, carRadius real, carLat real, carLon real);
+	delete from evs;
+	`
+
 	_, err = db.Exec(sqlStmt)
 	checkErr(err)
 

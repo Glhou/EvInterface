@@ -200,6 +200,7 @@
 <button onclick="toggleCarLabel();reloadData()">Toggle Car Labels</button>
 <button onclick="toggleEnergyLabel();reloadData()">Toggle Energy Labels</button>
 <button onclick="toggleCircle();reloadData()">Toggle Circle</button>
+<button onclick="toggleAloneEv()">Toggle Alone Ev</button>
 <button onclick="reloadData()">Reload Map</button>
 <button onclick="toggleLegend()">Hide Legend</button>
 <script>
@@ -207,6 +208,7 @@
     var CARLABELS = true;
     var ENERGYLABELS = true;
     var CIRCLES = true;
+    var ALONE_EV = false;
     function toggleLabel() {
         var labels = document.getElementsByClassName("my-label");
         LABELS = !LABELS;
@@ -256,6 +258,10 @@
         }
     }
 
+    function toggleAloneEv() {
+        ALONE_EV = !ALONE_EV
+    }
+
     function toggleLegend() {
         var legend = document.getElementById("legend");
         if (legend.style.opacity == 0) {
@@ -284,8 +290,12 @@
                 map.removeLayer(layer);
             }
         });
-
-        map.panTo(center);
+        try {
+            map.panTo(center);
+        }
+        catch (err) {
+            console.log(err);
+        }
     }
 </script>
 
@@ -300,13 +310,19 @@
         return null;
     }
 
-    function getCenterPoint(tokens, bids) {
+    function getCenterPoint(tokens, evs, bids) {
         var center = [0, 0];
         var total = 0;
         for (var i = 0; i < bids.length; i++) {
             var bid = bids[i];
             center[0] += bid['CarLat']
             center[1] += bid['CarLon']
+            total += 1;
+        }
+        for (var i = 0; i < evs.length; i++) {
+            var ev = evs[i];
+            center[0] += ev['CarLat']
+            center[1] += ev['CarLon']
             total += 1;
         }
         for (var i = 0; i < tokens.length; i++) {
@@ -354,9 +370,30 @@
         ).then((data) => {
             var circles_list = []
             bids = data["Bids"] ? data["Bids"] : [];
+            evs = data["Evs"] ? data["Evs"] : [];
             tokens = data["Tokens"] ? data["Tokens"] : [];
-            center = getCenterPoint(tokens, bids)
+            center = getCenterPoint(tokens, evs, bids)
             reloadMap(center ? center : [0, 0]);
+            ALONE_EV && evs.forEach((ev) => {
+                consumerIcon = ev.CarId.startsWith("PoC") ? realConsumer : generatedConsumer;
+                if (CARLABELS) {
+                    var marker = L.marker([ev["CarLat"], ev["CarLon"]], { icon: L.divIcon({ html: consumerIcon }) }).addTo(map)
+                        .bindTooltip(`<div id="${ev['CarId']}"><b>${ev['CarEnergy']}%</b> </div>`, { permanent: true, className: "carLabel", offset: [-25, 30] })
+                }
+                else {
+                    var marker = L.marker([ev["CarLat"], ev["CarLon"]], { icon: L.divIcon({ html: consumerIcon }) }).addTo(map)
+                }
+                if (CIRCLES && !circles_list.includes(ev['CarId'])) {
+                    L.circle([ev["CarLat"], ev["CarLon"]], {
+                        className: 'circle',
+                        color: 'red',
+                        fillColor: '#f05010',
+                        fillOpacity: 0.5,
+                        radius: ev["CarRadius"] * 1000
+                    }).addTo(map);
+                    circles_list.push(ev["CarId"])
+                }
+            })
             bids.forEach((bid) => {
                 consumerIcon = bid.CarId.startsWith("PoC") ? realConsumer : generatedConsumer;
                 if (CARLABELS) {

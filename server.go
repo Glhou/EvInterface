@@ -13,6 +13,7 @@ func main() {
 	http.Handle("/", fileServer)
 
 	http.HandleFunc("/bid", bidHandle)
+	http.HandleFunc("/ev", evHanlde)
 	http.HandleFunc("/auction", auctionHandle)
 	http.HandleFunc("/token", tokenHandle)
 	http.HandleFunc("/data", dataHandle)
